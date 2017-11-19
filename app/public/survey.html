@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>FriendFinder - Survey</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css " rel="stylesheet " integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u " crossorigin="anonymous ">
+    <link href="https://bootswatch.com/slate/bootstrap.min.css " rel="stylesheet ">
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js "
+            integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+            crossorigin=" anonymous "></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js " integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa " crossorigin="anonymous "></script>
+</head>
+<body>
+    <main class="container ">
+        <div class="row ">
+            <div class="col-lg-10 col-lg-offset-1 ">
+                <h1>
+                    Survey Questionnaire
+                </h1>
+                <hr>
+                <form class="form-horizontal ">
+                    <fieldset>
+                        <h3>
+                            About You
+                        </h3>
+                        <div class="form-group ">
+                            <h4>
+                                Name (Required)
+                            </h4>
+                            <input type="text " class="form-control " id="inputName " placeholder="Full Name ">
+                        </div>
+                        <div class="form-group ">
+                            <h4>
+                                Link to Photo Image (Required)
+                            </h4>
+                            <input type="url " class="form-control " id="inputImage " placeholder="Image URL ">
+                        </div>
+                        <hr>
+                        <div id="questions ">
+                        </div>
+                        <div class="form-group ">
+                            <div class="col-lg-12 ">
+                                <button type="reset " class="btn btn-danger " id="cancelBtn ">Cancel</button>
+                                <button type="submit " class="btn btn-success " id="submitBtn ">Submit</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </main>
+    <div id="resultsModal " class="modal fade " role="dialog ">
+        <div class="modal-dialog ">
+            <div class="modal-content ">
+                <div class="modal-header ">
+                    <button type="button " class="close " data-dismiss="modal ">&times;</button>
+                    <h2 class="modal-title "><strong>Best Match</strong></h2>
+                </div>
+                <div class="modal-body ">
+                    <h2 id="matchName ">Yaaaaay!</h2>
+                </div>
+                <div class="modal-footer ">
+                    <button type="button " class="btn btn-default " data-dismiss="modal ">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer ">
+        <div class="container ">
+            <p><a href="/api/friends ">API Friends List</a> | <a     target="_blank " href="https://github.com/mattjestrada/friendFinder ">GitHub Repo</a></p>
+        </div>
+    </footer>
+    <script type="text/javascript ">
+        var choices = ["1 (Strongly Disagree) ","2 ","3 ","4 ","5 (Strongly Agree) "];
+        // array of questions
+        var questions = [
+            "You like to play/watch sports. ",
+            "You would rather dance battle than actual battle. ",
+            "You show tremendous amounts of road rage ",
+            "You can go the whole day without eating. ",
+            "If you cut the cheese you would blame it on someone else. ",
+            "You prefer to go to a Chuck E. Cheese rather than Dave and Busters. ",
+            "You always choose scissors over rock or paper. ",
+            "You prefer the soothing sounds of Kenny G than the shrieks of Maroon 5. ",
+            "You have super powers that others don 't know about.",
+            "Most of the time you cry yourself to sleep."
+        ];
+        for (var i = 0; i < questions.length; i++) {
+            var questionDiv = $("<div>");
+            questionDiv.addClass("form-group");
+            var questionNumber = $("<h4>");
+            questionNumber.text("Question #" + (parseInt(i) + 1));
+            var questionText = $("<h5>");
+            questionText.text(questions[i]);
+            var questionChoices = $("<div>");
+            questionChoices.addClass("col-lg-3");
+            var questionSelect = $("<select>");
+            questionSelect.addClass("form-control question");
+            questionSelect.attr("id", "q" + (parseInt(i) + 1));
+            for (var j = 0; j < choices.length; j++) {
+                var option = $("<option>");
+                option.attr("value", (parseInt(j) + 1));
+                option.text(choices[j]);
+                questionSelect.append(option);
+            }
+            questionChoices.append(questionSelect);
+            questionDiv.append(questionNumber);
+            questionDiv.append(questionText);
+            questionDiv.append(questionChoices);
+            $("#questions").append(questionDiv);
+        }
+
+        $("#submitBtn").on("click", function(event) {
+            event.preventDefault();
+            var results = [];
+            $(".question").each(function() {
+                results.push($(this).val());
+            });
+
+            var newFriend = {
+                name: $("#inputName").val().trim(),
+                photo: $("#inputImage").val().trim(),
+                scores: results.toString()
+            };
+
+            var currentURL = window.location.origin;
+
+            $.post(currentURL + "/api/friends", newFriend)
+            .done(function(data) {
+
+                if (Object.keys(data).length > 1) {
+                    $("#matchName").text(data.friend_name);
+                    $("#matchImg").attr("src", data.friend_image).css("max-height", "400px");
+
+                } else {
+                    $("#matchName").text(data.error);
+                }
+
+                $("#resultsModal").modal('toggle ');
+                $(".question").each(function() {
+                    $(this).val("");
+                });
+
+            });
+        });
+    </script>
+</body>
+</html>
